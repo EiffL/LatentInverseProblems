@@ -18,24 +18,29 @@ Output `<promise>BREAKTHROUGH</promise>` when achieved.
 
 The problem provides: `decoder`, `decoder_jacobian`, `encoder`, `score`, `denoise`, `tweedie_cov`, `log_posterior`, `posterior_grid`, `hpd_level`.
 
+## Broad Research Intuition (try to find a method that is inspired by this intuition, but feel free to deviate)
+
+Annealed Langevin Sampling should in principle be able to achieve calibration if noise levels and step sizes are chosen correctly. One could imagine annealing the likelihood somehow, in a way that more or less matches the annealing of the prior. Than langevin sampling should be able to sample the distribution described by summing annealed prior score and annealed likelihood score easily. The main challenge is to know if the chain has achieved the right equilibrium at the current temperature level, before going to the next, and/or how to transport points from one temperatrue level to the next, so that we can minimize the number of "correction" langevin steps. 
+ 
 ## The Loop
 
 1. **Read state**: `results.tsv`, `results/scoreboard.md`, `results/insights.md`, `papers/index.md`
 2. **Decide**: pick next experiment based on accumulated evidence. Search literature when stuck.
 3. **Implement & run**: prototype in `experiment.py`, run in <2 min. Promote working solvers to `lip/solvers/`.
-4. **Log**: append to `results.tsv`, update `results/scoreboard.md` if new best, update `results/insights.md`.
-5. **Commit or revert**: improvement → `git commit`. Regression → `git checkout -- experiment.py lip/solvers/`. Always log.
+4. **Log**: append to `results.tsv`, update `results/scoreboard.md` if new best, update `results/insights.md`. Append motivations and ideas to `log.md`.
+5. **Document**: when you find a new paper or useful reference, add a summary to `papers/` and update `papers/index.md`.
+6. **Commit or revert**: improvement → `git commit`. Regression → `git checkout -- experiment.py lip/solvers/`. Always log.
 
 **Stuck-loop rules**: 3× same approach with no improvement → move on. 5 iterations with no progress → search literature.
 
 ## Files
 
-| Modify freely | `experiment.py`, `results/`, `papers/` |
+| Modify freely | `experiment.py`, `results/`, `papers/`, `log.md` |
 |---------------|----------------------------------------|
 | Modify with care | `lip/solvers/`, `lip/solvers/__init__.py`, `scripts/run_mnist_vae.py` |
 | Do not modify | `program.md`, `report.md`, `lip/problems.py`, `lip/metrics.py` |
 
-Knowledge base: `report.md` (31-paper survey), `papers/` (structured summaries), `results/insights.md` (findings + hypotheses).
+Knowledge base: `report.md` (31-paper survey), `papers/` (structured summaries), `results/insights.md` (findings + hypotheses), `log.md` (motivations + ideas journal).
 
 ## Rules
 
