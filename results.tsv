@@ -1,3 +1,5 @@
 iter	date	hypothesis	method	problem	hpd_mean	hpd_ks	time_s	verdict	notes
 0	2026-03-13	baseline	Oracle Langevin	MNISTVAE	0.518	0.079	88	BASELINE	ULA N=3000, lr=5e-7, n=1000
 0	2026-03-13	baseline	Latent LATINO	MNISTVAE	0.998	0.982	-	BASELINE	severely over-dispersed
+1	2026-03-13	H3+H6: MAP-init FPS-SMC small sigma_max	FPS-SMC-MAP	MNISTVAE	0.040	0.848	112	WORSE	severely under-dispersed, smax=0.3
+1	2026-03-13	H3+H5: Score-Annealed Langevin	SAL	MNISTVAE	0.533	0.081	12	BETTER	10 levels, smax=0.1, 30 steps/level, n=200
