@@ -20,14 +20,18 @@ The posterior is extremely concentrated (std ~0.015) relative to the prior (std=
 
 ## Current Solvers
 
-| Solver | HPD mean (target: 0.500) | KS stat (target: 0) | Status |
-|--------|:---:|:---:|--------|
-| **Oracle Langevin** | 0.518 | 0.079 | Calibrated |
-| Latent LATINO | 0.998 | 0.982 | Severely over-dispersed |
+| Solver | Type | HPD mean (target: 0.500) | KS stat (target: 0) | Status |
+|--------|------|:---:|:---:|--------|
+| **Oracle Langevin** | MCMC (reference) | 0.518 | 0.079 | Calibrated |
+| FPS-SPF | SMC / bootstrap PF | TBD | TBD | -- |
+| FPS-SMC | SMC / tailored proposal | TBD | TBD | -- |
+| Latent LATINO | Diffusion + proximal | 0.998 | 0.982 | Over-dispersed |
 
-**Oracle Langevin** is direct MCMC (ULA) on `grad log p(z|y)` at noise level 0 -- it bypasses the diffusion framework entirely (no score function `grad log p_t(z)` involved). It validates the grid posterior and proves calibrated sampling is achievable, but is **not** a diffusion-based solution.
+**Oracle Langevin** is direct MCMC (ULA) on `grad log p(z|y)` -- bypasses the diffusion framework entirely. Validates the grid posterior but is **not** a diffusion-based solution.
 
-**Latent LATINO** (Spagnoletti et al., 2025) is a true diffusion-based method using encode-noise-denoise-decode-proximal round-trips through the score function. It fails catastrophically on the neural decoder (severely over-dispersed).
+**FPS-SPF / FPS-SMC** (Dou & Song, ICLR 2024) adapt Filtering Posterior Sampling for nonlinear latent inverse problems. FPS-SPF uses unconditional reverse VE-SDE + Tweedie-based likelihood weights. FPS-SMC uses a tailored proposal with linearized decoder (Prop. B.3 analog).
+
+**Latent LATINO** (Spagnoletti et al., 2025) uses encode-noise-denoise-decode-proximal round-trips. Severely over-dispersed on MNISTVAE.
 
 ## Quick Start
 
@@ -69,6 +73,7 @@ lip/                    -- JAX library (pip install -e .)
   solvers/              -- One file per solver
     oracle_langevin.py  -- ULA on exact log-posterior (reference)
     latent_latino.py    -- LATINO (encode-denoise-decode-proximal)
+    fps.py              -- FPS-SPF and FPS-SMC (Dou & Song, ICLR 2024)
 scripts/
   run_mnist_vae.py      -- Full benchmark
   train_vae.py          -- Train/retrain VAE weights

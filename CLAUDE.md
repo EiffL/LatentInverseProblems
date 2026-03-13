@@ -35,6 +35,7 @@ python experiment.py               # Quick prototype / scratch pad
   - `solvers/` -- One file per solver, signature `(problem, y, key, **kwargs) -> z`.
     - `oracle_langevin.py` -- ULA on exact log-posterior (reference/oracle)
     - `latent_latino.py` -- LATINO encode-denoise-decode-proximal (Spagnoletti et al., 2025)
+    - `fps.py` -- Filtering Posterior Sampling (Dou & Song, ICLR 2024), two variants: `fps_spf` (bootstrap PF) and `fps_smc` (tailored proposal)
     - `__init__.py` -- Exports `SOLVERS` dict
   - `metrics.py` -- `latent_calibration_test` (HPD test), `latent_posterior_test`, `latent_benchmark`.
   - `__init__.py` -- Re-exports `MNISTVAE` and metrics.
@@ -63,7 +64,7 @@ python experiment.py               # Quick prototype / scratch pad
 
 The Gaussian prior `N(0, I)` is a deliberate choice: it provides the **exact score function** at every noise level analytically (no trained score network needed). This means any calibration failure is purely due to the solver algorithm, not score estimation error. The `problem.score(z, sigma)` and `problem.denoise(z, sigma)` methods use this exact score.
 
-The MNISTVAE problem provides: `decoder`, `decoder_jacobian` (via `jax.jacfwd`), `encoder` (VAE encoder), `score` (exact for N(0,I) prior), `denoise` (Tweedie), `tweedie_cov`, `log_posterior`, `posterior_grid`, `posterior_mean_cov`, `hpd_level`.
+The MNISTVAE problem provides: `decoder`, `decoder_jacobian` (via `jax.jacfwd`), `encoder` (VAE encoder), `score` (exact for N(0,I) prior), `denoise` (Tweedie), `tweedie_cov`, `log_posterior`, `posterior_grid`, `hpd_level`.
 
 ## Current Solvers
 
@@ -72,6 +73,12 @@ Direct MCMC (ULA) on `grad log p(z|y)` at noise level 0. Does **not** use the di
 
 ### Latent LATINO (Spagnoletti et al., 2025)
 Encode-noise-denoise-decode-proximal round-trip in pixel space. Severely over-dispersed on MNISTVAE (**hpd_mean=0.998**).
+
+### FPS-SPF (Dou & Song, ICLR 2024 -- bootstrap PF variant)
+Adapts Filtering Posterior Sampling for nonlinear latent inverse problems. Uses unconditional reverse VE-SDE as proposal with Tweedie-based incremental likelihood weights (Jacobian-corrected via Woodbury). Systematic resampling. Default K=128 particles, N=200 steps.
+
+### FPS-SMC (Dou & Song, ICLR 2024 -- tailored proposal variant)
+Full FPS-SMC with linearized decoder incorporated into the tailored proposal (Prop. B.3 analog). Marginal likelihood resampling weights. Optimal for linear problems; linearization may cause under-dispersion for nonlinear decoders. Default K=64 particles, N=200 steps.
 
 ## Metrics
 
