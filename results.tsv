@@ -1,5 +1,6 @@
 iter	date	hypothesis	method	problem	hpd_mean	hpd_ks	time_s	verdict	notes
-0	2026-03-13	baseline	Oracle Langevin	MNISTVAE	0.518	0.079	88	BASELINE	ULA N=3000, lr=5e-7, n=1000
-0	2026-03-13	baseline	Latent LATINO	MNISTVAE	0.998	0.982	-	BASELINE	severely over-dispersed
-1	2026-03-13	H3+H6: MAP-init FPS-SMC small sigma_max	FPS-SMC-MAP	MNISTVAE	0.040	0.848	112	WORSE	severely under-dispersed, smax=0.3
-1	2026-03-13	H3+H5: Score-Annealed Langevin	SAL	MNISTVAE	0.533	0.081	12	BETTER	10 levels, smax=0.1, 30 steps/level, n=200
+1	2026-03-13	SAL baseline reconfirm	SAL(10x30,smax=0.1)	MNISTVAE(0.4)	0.528	0.092	12	pass	n=200, meets target but KS close to boundary
+2	2026-03-13	Polish phase fixes ULA bias	SAL+polish	MNISTVAE(0.4)	0.563	0.131	4	fail	Polishing with exact posterior makes over-dispersion WORSE
+3	2026-03-13	Explicit lik annealing matches prior	SAL+anneal_lik	MNISTVAE(0.4)	0.560	0.127	4	fail	Explicit α_t tempering of likelihood doesn't help
+4	2026-03-13	Geometric β-tempering	GeoTemp(50x5)	MNISTVAE(0.4)	0.696	0.342	3	fail	Pure geometric tempering severely over-dispersed; gradient too weak at low β
+5	2026-03-13	MALA eliminates ULA bias	MALA-SAL(10x30)	MNISTVAE(0.4)	0.508	0.036	17	pass	n=500 avg over 3 seeds; KS=0.036 vs SAL's 0.066. Near-perfect calibration!
