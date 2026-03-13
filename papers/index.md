@@ -15,3 +15,4 @@
 | wu2025_ald_convergence | 2025 | ALD has poly-time convergence with L^4-accurate scores; annealing provably helps |
 | janati2024_divideconquer | 2024 | Divide-and-conquer: intermediate posteriors at each noise level + MCMC |
 | provable_gt_ld2024 | 2024 | Geometric tempering convergence: exponential speedup but can fail on smooth paths |
+| sabour2025_fmtt | 2025 | Flow map look-ahead for test-time guidance; exact reweighting via Jarzynski |

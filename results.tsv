@@ -6,3 +6,5 @@ iter	date	hypothesis	method	problem	hpd_mean	hpd_ks	time_s	verdict	notes
 5	2026-03-13	MALA eliminates ULA bias	MALA-SAL(10x30)	MNISTVAE(0.4)	0.508	0.036	17	pass	n=500 avg over 3 seeds; KS=0.036 vs SAL's 0.066. Near-perfect calibration!
 6	2026-03-13	Variance ratio diagnostic	MALA-SAL vs SAL	MNISTVAE(0.4)	-	-	-	diag	MALA var_ratio median=1.04 (perfect). SAL var_ratio median=1077 (1000x over-spread)
 7	2026-03-13	MAP-init improves mode-finding	MALA-SAL-MAP5	MNISTVAE(0.4)	0.513	0.062	9	neutral	Marginal improvement; encoder already good for most obs. Only helps prior-tail cases
+8	2026-03-13	Iterative look-ahead (FMTT-inspired)	MALA+LA10	MNISTVAE(0.4)	0.978	0.911	17	fail	Gradient ascent look-ahead washes out likelihood signal → samples from prior
+9	2026-03-13	MMPS broadened noise model	MMPS-MALA	MNISTVAE(0.4)	0.547	0.110	8	fail	Broadened noise weakens likelihood → more over-dispersed than baseline
