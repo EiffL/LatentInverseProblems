@@ -4,3 +4,5 @@ iter	date	hypothesis	method	problem	hpd_mean	hpd_ks	time_s	verdict	notes
 3	2026-03-13	Explicit lik annealing matches prior	SAL+anneal_lik	MNISTVAE(0.4)	0.560	0.127	4	fail	Explicit α_t tempering of likelihood doesn't help
 4	2026-03-13	Geometric β-tempering	GeoTemp(50x5)	MNISTVAE(0.4)	0.696	0.342	3	fail	Pure geometric tempering severely over-dispersed; gradient too weak at low β
 5	2026-03-13	MALA eliminates ULA bias	MALA-SAL(10x30)	MNISTVAE(0.4)	0.508	0.036	17	pass	n=500 avg over 3 seeds; KS=0.036 vs SAL's 0.066. Near-perfect calibration!
+6	2026-03-13	Variance ratio diagnostic	MALA-SAL vs SAL	MNISTVAE(0.4)	-	-	-	diag	MALA var_ratio median=1.04 (perfect). SAL var_ratio median=1077 (1000x over-spread)
+7	2026-03-13	MAP-init improves mode-finding	MALA-SAL-MAP5	MNISTVAE(0.4)	0.513	0.062	9	neutral	Marginal improvement; encoder already good for most obs. Only helps prior-tail cases

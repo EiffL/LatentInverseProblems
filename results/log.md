@@ -40,3 +40,37 @@ SAL (Score-Annealed Langevin) was the best diffusion-based method: hpd=0.533, KS
 1. Preconditioning MALA with Tweedie covariance for higher-dimensional latent spaces
 2. Using MALA within the LD-SMC framework for formal convergence guarantees
 3. Testing on latent spaces with d > 2 where MALA acceptance rate may degrade
+
+## 2026-03-13: Session 2 — Posterior diversity diagnostics
+
+### Motivation
+Visual inspection of plots showed MALA-SAL concentrating tightly while SAL scattered broadly. User concern: is MALA-SAL under-mixing? Are the SAL outliers exploring real secondary modes?
+
+### Iteration 6: Log-scale contour analysis
+- Replotted posterior contours on log₁₀ scale (10 orders of magnitude).
+- **Finding**: the posterior is genuinely unimodal for most observations. SAL outlier points land in regions with essentially zero posterior density — they are NOT on secondary modes.
+- Log-posterior at SAL outliers: 76 nats below MAP (= 10^{-33} probability ratio). Pure ULA noise.
+
+### Iteration 7: Posterior variance ratio test
+- **New metric**: Draw K=50 samples per observation, compare var(solver) / var(grid posterior).
+- **MALA-SAL**: median ratio = 1.04 (near-perfect posterior spread coverage)
+- **SAL**: median ratio = 1077 (1000× too broad — the "exploration" is 99.9% noise)
+- This conclusively proves SAL's scattered points are ULA artifacts, not real posterior structure.
+
+### Iteration 8: Multi-restart MAP initialization
+- **Problem**: For ~5% of observations where z_true is at the prior tail, the encoder MAP is far from the posterior mode (up to 72 nats gap). MALA-SAL improves over the encoder but doesn't reach the distant mode.
+- **Approach**: Run 5-10 gradient ascent chains from encoder + prior samples, pick the best MAP, then run MALA-SAL from there.
+- **Result**: Marginal improvement (hpd=0.513 vs 0.516 average). Most observations already well-served by encoder. Not worth the extra compute for this problem.
+- **Multi-restart with selection of best *final* sample**: FAILS (hpd=0.412) due to selection bias toward the mode.
+
+### Key insight (session 2)
+**SAL's apparent "diversity" is an illusion caused by ULA noise, not exploration of real posterior structure.** The posterior for MNISTVAE is overwhelmingly unimodal. The correct metric for posterior diversity is the variance ratio, not visual inspection of scatter plots.
+
+### New diagnostic: Posterior variance ratio
+```python
+# Draw K samples per observation, compare variance to grid truth
+solver_var = var(z_samples)
+true_var = ∫(z - μ)² p(z|y) dz  (from grid)
+ratio = solver_var / true_var  # target: 1.0
+```
+This captures mixing quality: stuck chains → ratio << 1, noisy chains → ratio >> 1.
