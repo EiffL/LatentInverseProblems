@@ -4,15 +4,15 @@ Uses the exact log-posterior gradient: ∇_z log p(z|y) = -(z/σ₀²) + J^T(y-D
 This is available for any VAE latent inverse problem since both the decoder
 and prior are known.
 
-For MNISTVAE with sigma_n=0.2, the posterior is extremely concentrated
-(std ~0.015), requiring very small step sizes (lr ~5e-7).
+For MNISTVAE with sigma_n=0.4, the posterior is broader than at sigma_n=0.2
+but still concentrated relative to the prior, requiring small step sizes.
 """
 
 import jax
 import jax.numpy as jnp
 
 
-def _oracle_langevin_single(problem, y, key, *, N=3000, lr=5e-7):
+def _oracle_langevin_single(problem, y, key, *, N=10000, lr=2e-5):
     """Single-sample ULA on exact log-posterior with lax.scan."""
     d = problem.d_latent
     z = problem.encoder(y)
@@ -34,7 +34,7 @@ _jit_solve = None
 _jit_config = None
 
 
-def oracle_langevin(problem, y, key, *, N=3000, lr=5e-7, **kwargs):
+def oracle_langevin(problem, y, key, *, N=10000, lr=2e-5, **kwargs):
     """ULA on exact log-posterior, initialized from encoder."""
     global _jit_solve, _jit_config
 

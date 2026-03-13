@@ -47,7 +47,7 @@ from lip import MNISTVAE
 from lip.metrics import latent_calibration_test
 import jax
 
-problem = MNISTVAE(sigma_n=0.2)
+problem = MNISTVAE(sigma_n=0.4)
 
 def my_solver(problem, y, key, *, N=200, **kwargs):
     z = problem.encoder(y)  # initialize

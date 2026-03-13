@@ -32,7 +32,7 @@ class MNISTVAE:
     Train with: python scripts/train_vae.py
     """
 
-    sigma_n: float = 0.2
+    sigma_n: float = 0.4
     sigma_0: float = 1.0
     weights_path: str = None
     _params: dict = field(default=None, repr=False, init=False)

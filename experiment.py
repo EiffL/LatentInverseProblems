@@ -9,7 +9,7 @@ import jax.numpy as jnp
 from lip import MNISTVAE
 from lip.metrics import latent_calibration_test
 
-problem = MNISTVAE(sigma_n=0.2)
+problem = MNISTVAE(sigma_n=0.4)
 
 
 if __name__ == "__main__":

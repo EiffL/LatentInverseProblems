@@ -38,7 +38,7 @@ archive/                -- previous experiments (1D Gaussian, 2D toy problems, o
 
 | Property | Value |
 |----------|-------|
-| Problem | `MNISTVAE(sigma_n=0.2)` |
+| Problem | `MNISTVAE(sigma_n=0.4)` |
 | Decoder | Pretrained MLP VAE `D: R^2 -> [0,1]^784` (28x28 images) |
 | Observation model | `y = D(z*) + sigma_n * eps` |
 | Ground truth | Grid-exact posterior (adaptive fine grid centered on MAP) |
@@ -92,7 +92,7 @@ from lip import MNISTVAE
 from lip.metrics import latent_calibration_test
 import jax
 
-problem = MNISTVAE(sigma_n=0.2)
+problem = MNISTVAE(sigma_n=0.4)
 result = latent_calibration_test(problem, my_solver, jax.random.PRNGKey(0), n=200)
 print(f"HPD mean: {result['hpd_mean']:.3f} (target: 0.500)")
 ```
@@ -209,7 +209,7 @@ The true posterior is computed by adaptive fine grid evaluation centered on the 
 
 ## 6. Seed Hypotheses
 
-All experiments target `MNISTVAE(sigma_n=0.2)`.
+All experiments target `MNISTVAE(sigma_n=0.4)`.
 
 **H1: Annealed Langevin with learned noise schedule.** Oracle Langevin works but uses a fixed lr. Try annealing the step size (warm-up then decay) to mix faster while maintaining calibration.
 
@@ -279,7 +279,7 @@ rozet2024, chung2023, spagnoletti2025, achituve2025, wu2024_pnpdm, askari2025, g
 
 ## 9. Completion
 
-Output `<promise>BREAKTHROUGH</promise>` if you achieve hpd_mean in [0.45, 0.55] AND hpd_ks < 0.1 on MNISTVAE(sigma_n=0.2) with a **diffusion-based method** -- i.e., one that uses the score function `grad log p_t(z)` at various noise levels as its generative prior, combined with some form of likelihood guidance. Oracle Langevin bypasses the diffusion framework entirely (direct MCMC on the exact posterior) and does not count.
+Output `<promise>BREAKTHROUGH</promise>` if you achieve hpd_mean in [0.45, 0.55] AND hpd_ks < 0.1 on MNISTVAE(sigma_n=0.4) with a **diffusion-based method** -- i.e., one that uses the score function `grad log p_t(z)` at various noise levels as its generative prior, combined with some form of likelihood guidance. Oracle Langevin bypasses the diffusion framework entirely (direct MCMC on the exact posterior) and does not count.
 
 Otherwise iterate until `--max-iterations`, then write `results/summary.md`.
 

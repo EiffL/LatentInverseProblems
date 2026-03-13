@@ -56,7 +56,7 @@ python experiment.py               # Quick prototype / scratch pad
 | Prior | `z ~ N(0, I_{d_latent})` |
 | Decoder | Pretrained MLP VAE `D: R^d -> [0,1]^784` (28x28 MNIST) |
 | Forward model | `y = D(z*) + sigma_n * eps` |
-| Default sigma_n | 0.2 (per-pixel SNR ~ 1, digits visible but noisy) |
+| Default sigma_n | 0.4 (broader posterior for calibration testing) |
 | Posterior std | ~0.015 (extremely concentrated vs prior std=1.0) |
 | Ground truth | Grid-exact for d_latent=2, adaptive fine grid centered on MAP |
 | Score function | **Exact analytic**: `grad log p_t(z) = -z / (sigma_0^2 + sigma_t^2)` at all noise levels |
@@ -68,7 +68,7 @@ The MNISTVAE problem provides: `decoder`, `decoder_jacobian` (via `jax.jacfwd`),
 ## Current Solvers
 
 ### Oracle Langevin (validation only)
-Direct MCMC (ULA) on `grad log p(z|y)` at noise level 0. Does **not** use the diffusion score function `grad log p_t(z)` at all -- bypasses the diffusion framework entirely. Validates that the grid posterior is correct and calibrated sampling is achievable. N=3000 steps, lr=5e-7, **hpd_mean=0.518, KS=0.079**.
+Direct MCMC (ULA) on `grad log p(z|y)` at noise level 0. Does **not** use the diffusion score function `grad log p_t(z)` at all -- bypasses the diffusion framework entirely. Validates that the grid posterior is correct and calibrated sampling is achievable. N=10000 steps, lr=2e-5, **hpd_mean=0.513, KS=0.039**.
 
 ### Latent LATINO (Spagnoletti et al., 2025)
 Encode-noise-denoise-decode-proximal round-trip in pixel space. Severely over-dispersed on MNISTVAE (**hpd_mean=0.998**).

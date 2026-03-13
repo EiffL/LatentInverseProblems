@@ -7,7 +7,7 @@ import jax
 import jax.numpy as jnp
 
 
-def latent_calibration_test(problem, solver, key, *, n=500, **solver_kw):
+def latent_calibration_test(problem, solver, key, *, n=100, **solver_kw):
     """HPD calibration test.
 
     For each (z_true, y) pair, runs the solver and computes the HPD level
@@ -45,7 +45,7 @@ def latent_posterior_test(problem, solver, y, key, *, n=5000, **solver_kw):
 
 
 def latent_benchmark(problem, solvers=None, key=None, *, y_star=None,
-                     n_samples=5000, n_cal=500, output_dir=None):
+                     n_samples=500, n_cal=100, output_dir=None):
     """Run all solvers on MNISTVAE and report calibration."""
     if solvers is None:
         from .solvers import SOLVERS

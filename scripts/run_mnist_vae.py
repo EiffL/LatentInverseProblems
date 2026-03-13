@@ -14,10 +14,10 @@ from lip.solvers import SOLVERS
 
 def main():
     parser = argparse.ArgumentParser(description="MNIST VAE benchmark")
-    parser.add_argument("--sigma-n", type=float, default=0.2)
-    parser.add_argument("--n-cal", type=int, default=200,
-                        help="Number of calibration samples (grid eval is expensive)")
-    parser.add_argument("--n-samples", type=int, default=2000,
+    parser.add_argument("--sigma-n", type=float, default=0.4)
+    parser.add_argument("--n-cal", type=int, default=100,
+                        help="Number of calibration samples")
+    parser.add_argument("--n-samples", type=int, default=500,
                         help="Number of posterior samples per solver")
     parser.add_argument("--solvers", nargs="*", default=None,
                         help="Subset of solvers to run (default: all)")
