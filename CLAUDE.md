@@ -8,6 +8,8 @@ Identify a reliable and correct strategy for **diffusion posterior sampling in l
 
 **Central open problem:** No existing diffusion-based method provides calibrated posteriors with latent diffusion models. The decoder Jacobian distortion, representation error, and decoder nonlinearity remain unsolved.
 
+**For research loop instructions, see `program.md`.** Current best results are in `results/scoreboard.md`.
+
 ## Setup
 
 ```bash
@@ -33,60 +35,16 @@ python experiment.py               # Quick prototype / scratch pad
   - `vae.py` -- Pure-JAX VAE forward pass (encoder/decoder) with weight loading from `.npz`.
   - `data/` -- Pretrained VAE weights (`vae_mnist_d2.npz`).
   - `solvers/` -- One file per solver, signature `(problem, y, key, **kwargs) -> z`.
-    - `oracle_langevin.py` -- ULA on exact log-posterior (reference/oracle)
-    - `latent_latino.py` -- LATINO encode-denoise-decode-proximal (Spagnoletti et al., 2025)
-    - `fps.py` -- Filtering Posterior Sampling (Dou & Song, ICLR 2024), two variants: `fps_spf` (bootstrap PF) and `fps_smc` (tailored proposal)
-    - `__init__.py` -- Exports `SOLVERS` dict
   - `metrics.py` -- `latent_calibration_test` (HPD test), `latent_posterior_test`, `latent_benchmark`.
   - `__init__.py` -- Re-exports `MNISTVAE` and metrics.
-- `scripts/`
-  - `run_mnist_vae.py` -- MNISTVAE benchmark (all solvers)
-  - `train_vae.py` -- Train MNIST VAE and save weights to `lip/data/`
+- `scripts/` -- `run_mnist_vae.py` (benchmark), `train_vae.py` (VAE training)
 - `experiment.py` -- Scratch pad for prototyping new solvers
 - `program.md` -- Autonomous research loop instructions
 - `report.md` -- Literature survey (31 papers)
 - `results.tsv` -- Experiment log (append-only)
-- `results/` -- Benchmark outputs (per-solver plots and JSON)
+- `results/` -- Benchmark outputs, `scoreboard.md`, `insights.md`
 - `papers/` -- Paper summaries (knowledge base for research loop)
 - `archive/` -- Previous experiments (1D Gaussian, 2D toy problems, old solvers)
-
-## The Problem: MNISTVAE
-
-| Property | Value |
-|----------|-------|
-| Prior | `z ~ N(0, I_{d_latent})` |
-| Decoder | Pretrained MLP VAE `D: R^d -> [0,1]^784` (28x28 MNIST) |
-| Forward model | `y = D(z*) + sigma_n * eps` |
-| Default sigma_n | 0.4 (broader posterior for calibration testing) |
-| Posterior std | ~0.015 (extremely concentrated vs prior std=1.0) |
-| Ground truth | Grid-exact for d_latent=2, adaptive fine grid centered on MAP |
-| Score function | **Exact analytic**: `grad log p_t(z) = -z / (sigma_0^2 + sigma_t^2)` at all noise levels |
-
-The Gaussian prior `N(0, I)` is a deliberate choice: it provides the **exact score function** at every noise level analytically (no trained score network needed). This means any calibration failure is purely due to the solver algorithm, not score estimation error. The `problem.score(z, sigma)` and `problem.denoise(z, sigma)` methods use this exact score.
-
-The MNISTVAE problem provides: `decoder`, `decoder_jacobian` (via `jax.jacfwd`), `encoder` (VAE encoder), `score` (exact for N(0,I) prior), `denoise` (Tweedie), `tweedie_cov`, `log_posterior`, `posterior_grid`, `hpd_level`.
-
-## Current Solvers
-
-### Oracle Langevin (validation only)
-Direct MCMC (ULA) on `grad log p(z|y)` at noise level 0. Does **not** use the diffusion score function `grad log p_t(z)` at all -- bypasses the diffusion framework entirely. Validates that the grid posterior is correct and calibrated sampling is achievable. N=10000 steps, lr=2e-5, **hpd_mean=0.513, KS=0.039**.
-
-### Latent LATINO (Spagnoletti et al., 2025)
-Encode-noise-denoise-decode-proximal round-trip in pixel space. Severely over-dispersed on MNISTVAE (**hpd_mean=0.998**).
-
-### FPS-SPF (Dou & Song, ICLR 2024 -- bootstrap PF variant)
-Adapts Filtering Posterior Sampling for nonlinear latent inverse problems. Uses unconditional reverse VE-SDE as proposal with Tweedie-based incremental likelihood weights (Jacobian-corrected via Woodbury). Systematic resampling. Default K=128 particles, N=200 steps.
-
-### FPS-SMC (Dou & Song, ICLR 2024 -- tailored proposal variant)
-Full FPS-SMC with linearized decoder incorporated into the tailored proposal (Prop. B.3 analog). Marginal likelihood resampling weights. Optimal for linear problems; linearization may cause under-dispersion for nonlinear decoders. Default K=64 particles, N=200 steps.
-
-## Metrics
-
-**Primary: `hpd_mean`** -- mean HPD credibility level of solver samples under the true grid posterior. Target: **0.500**.
-- hpd_mean < 0.5: under-dispersed (samples too concentrated)
-- hpd_mean > 0.5: over-dispersed (samples too spread out)
-
-**Secondary: `hpd_ks`** -- KS statistic of HPD levels vs Uniform(0,1). Target: close to 0.
 
 ## Key Dependencies and Patterns
 
@@ -94,33 +52,3 @@ Full FPS-SMC with linearized decoder incorporated into the tailored proposal (Pr
 - **optax** for VAE training
 - **diffrax** for ODE/SDE integration (diffusion solvers)
 - **diffrax 0.7+**: diffusion coefficients must return `lineax.DiagonalLinearOperator`, not raw arrays
-
-## How to Add a New Solver
-
-```python
-# lip/solvers/my_method.py
-import jax
-import jax.numpy as jnp
-
-def my_method(problem, y, key, *, N=200, **kwargs):
-    """Signature: (problem, y, key, **kwargs) -> z samples."""
-    # Return z with shape (..., problem.d_latent)
-    ...
-    return z
-```
-
-Register in `lip/solvers/__init__.py`:
-```python
-from .my_method import my_method
-SOLVERS["My Method"] = my_method
-```
-
-## Lessons Learned (from previous experiments)
-
-1. **Pixel-space is too simple**: Methods that work on 1D Gaussian or toy 2D problems fail on MNISTVAE.
-2. **MNISTVAE posterior is extremely concentrated**: std ~0.015 vs prior std=1.0. Diffusion-based methods produce samples spanning z in [-40, 40] while true posterior is +/-0.03 from the mode.
-3. **Grid fix was critical**: Original grid on [-4,4] had spacing 0.04 vs posterior std 0.015 -- less than 1 grid point per std. Now uses adaptive fine grid +/-0.2 centered on encoder MAP.
-4. **Oracle Langevin works** (but it's not diffusion-based): Direct MCMC on `grad log p(z|y)` achieves calibration. This validates the grid but doesn't solve the diffusion problem -- it bypasses the score function `grad log p_t(z)` entirely.
-5. **All diffusion-based solvers fail**: LATINO, DPS, MMPS, LFlow, Split Gibbs -- all are severely over-dispersed (hpd > 0.9). The noise schedule and step count cannot adapt to the concentrated posterior.
-6. **Latent MMPS worked on toy problems** but fails on MNISTVAE. The Tweedie covariance propagation through the decoder Jacobian is correct in principle but the 60x concentration ratio breaks it.
-7. **DPS guidance needs heavy dampening** for neural decoders (zeta ~ 0.01-0.5 vs 1.0 on toys) due to large Jacobian norms (~10-50).
